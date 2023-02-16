@@ -15,64 +15,72 @@ import {
 export class PasswordStrengthComponent {
   @Input() public passwordToCheck: string;
 
-  private colors = [
-    'text-gray-700',
-    'text-red-600',
-    'text-orange-600',
-    'text-green-600',
-  ];
   bar0: string;
   bar1: string;
   bar2: string;
+  infoMessage: string;
 
-  checkStrength(password: string) {
-    // 1
-    let force = 0;
-
-    // 2
-    const regex = /[$-/:-?{-~!"^_@`\[\]]/g;
-    const lowerLetters = /[a-z]+/.test(password);
-    const upperLetters = /[A-Z]+/.test(password);
-    const numbers = /[0-9]+/.test(password);
-    const symbols = regex.test(password);
-
-    // 3
-    const flags = [lowerLetters, upperLetters, numbers, symbols];
-
-    // 4
-    let passedMatches = 0;
-    for (const flag of flags) {
-      passedMatches += flag === true ? 1 : 0;
-    }
-
-    // 5
-    force += 2 * password.length + (password.length >= 10 ? 1 : 0);
-    force += passedMatches * 10;
-
-    // 6
-    force = password.length <= 6 ? Math.min(force, 10) : force;
-
-    // 7
-    force = passedMatches === 1 ? Math.min(force, 10) : force;
-    force = passedMatches === 2 ? Math.min(force, 20) : force;
-    force = passedMatches === 3 ? Math.min(force, 30) : force;
-    force = passedMatches === 4 ? Math.min(force, 40) : force;
-
-    return force;
-  }
+  private colors = [
+    'rgb(115 115 115)', //gray
+    'rgb(220 38 38)', // red
+    'rgb(234 88 12)', // orange
+    'rgb(22 163 74)', // green
+  ];
 
   ngOnChanges(changes: { [propName: string]: SimpleChange }): void {
+    this.infoMessage = '';
+    // const whitespaceRegExp = /\s/g;
     const password = changes['passwordToCheck'].currentValue;
     this.setBarColors(3, this.colors[0]);
+
     if (password) {
       const c = this.getColor(this.checkStrength(password));
-      this.setBarColors(c.index, c.color);
+      this.setBarColors(c?.index, c?.color);
     }
+  }
+
+  checkStrength(password: string) {
+    const whitespaceRegExp = /\s/g;
+    const symbolRegex = /[\$-/:-?}{-|~!;'&*+=<>,%"^#_@`\[\]]/g;
+    const letters = /[a-zA-Z]+/.test(password);
+    const numbers = /[0-9]+/.test(password);
+    const symbols = symbolRegex.test(password);
+
+    if (whitespaceRegExp.test(password)) {
+      this.infoMessage = 'Whitespaces are not allowed';
+      // this.setBarColors(3, this.colors[1]);
+      return 0;
+    }
+    if (password.length < 5) {
+      this.infoMessage = 'Password shoild contain at least 5 symbols';
+      return 0;
+    }
+    let force = 0;
+    let strengthLevel = 0;
+    const levels = [letters, numbers, symbols];
+
+    for (const level of levels) {
+      strengthLevel += level === true ? 1 : 0;
+    }
+    console.log('strengthLevel', strengthLevel);
+    return strengthLevel;
+    // 5
+    // force += 2 * password.length + (password.length >= 5 ? 1 : 0);
+    // force += strengthLevel * 10;
+    // // 6
+    // force = password.length <= 6 ? Math.min(force, 10) : force;
+    // // 7
+    // force = strengthLevel === 1 ? Math.min(force, 10) : force;
+    // force = strengthLevel === 2 ? Math.min(force, 20) : force;
+    // force = strengthLevel === 3 ? Math.min(force, 30) : force;
+    // force = strengthLevel === 4 ? Math.min(force, 40) : force;
+    // console.log('force', force);
+    // return force;
   }
 
   private getColor(s: number) {
-    let index = 0;
-    if (s === 10) {
+    let index;
+    if (s <= 10) {
       index = 0;
     } else if (s === 20) {
       index = 1;
@@ -84,8 +92,8 @@ export class PasswordStrengthComponent {
       index = 4;
     }
     return {
-      index: index + 1,
-      color: this.colors[index],
+      index: 3 - index,
+      color: this.colors[index + 1],
     };
   }
 
