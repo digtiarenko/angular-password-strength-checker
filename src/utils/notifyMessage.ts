@@ -36,6 +36,5 @@ function getHint(levels: boolean[]) {
     return { strengthLevel, hint: '' };
   }
   const hint = `Please add ${keyHints.join(', ')}.`;
-  console.log('hint', hint);
   return { hint, strengthLevel };
 }
